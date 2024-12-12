@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Upload</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1201.0.min.js"></script>
+</head>
+
+<body class="bg-gray-50">
+    <div class="flex justify-center items-center min-h-screen">
+        <div class="max-w-6xl w-full flex">
+            <!-- Left Section (Image & Text) -->
+            <div class="flex-1 flex justify-center items-center p-10">
+                <div>
+                    <img src="https://via.placeholder.com/150" alt="Person Image" class="rounded-full w-40 h-40 mb-6">
+                    <h2 class="text-3xl font-semibold text-gray-800 mb-4">Federated Learning: Innovative Machine Learning for Privacy and Flexibility</h2>
+                    <p class="text-gray-600 mb-4 text-justify">
+                        Federated learning is a cutting-edge approach that allows machine learning models to be trained across multiple decentralized devices or servers, without the need to share sensitive data. This technique ensures that data remains securely stored on individual devices while still enabling the creation of powerful, collaborative models.
+                    </p>
+                    <p class="text-gray-600 text-justify">The flexibility of federated learning enables various industries to build robust AI solutions while maintaining privacy and security. By processing data locally and only sharing model updates, federated learning minimizes the risks associated with data exposure, offering a secure environment for machine learning applications.</p>
+                </div>
+            </div>
+
+            <!-- Right Section (CSV Upload Form & Proceed Button) -->
+            <div id="uploadSection" class="flex-1 bg-blue-200 p-10 rounded-lg shadow-lg flex flex-col justify-center items-center">
+                <h2 class="text-3xl font-semibold text-center mb-6">Upload Your CSV File</h2>
+                <form class="space-y-6 text-center">
+                    <!-- File Upload -->
+                    <div class="flex justify-center">
+                        <input type="file" id="csvFile" class="border-2 border-gray-400 rounded-lg p-3 w-full max-w-md focus:outline-none focus:border-blue-500" />
+                    </div>
+                    <p class="text-center text-gray-500" id="fileName">No file chosen</p>
+
+                    <!-- Proceed Button -->
+                    <div class="flex justify-center mt-4">
+                        <button id="proceedBtn" type="button" class="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition duration-300">
+                            Proceed
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configure AWS SDK
+        AWS.config.update({
+            region: 'ap-southeast-2', // e.g., 'us-east-1'
+            credentials: new AWS.Credentials({
+                accessKeyId: 'AKIAQR5EO573U5MPKI2A',
+                secretAccessKey: '9O24lKnK63F+pJhhaCIy1a+jyYdzGpxS22IQ8Qo2'
+            })
+        });
+
+        const s3 = new AWS.S3();
+        const bucketName = 'obesity-federated-learning';
+
+        // Display selected file name
+        document.getElementById('csvFile').addEventListener('change', function (e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
+            document.getElementById('fileName').textContent = fileName;
+        });
+
+        // Handle Proceed button click
+        document.getElementById('proceedBtn').addEventListener('click', function () {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Please select a file first.');
+                return;
+            }
+
+            const params = {
+                Bucket: bucketName,
+                Key: file.name, // Optional: prefix folder
+                Body: file,
+                ContentType: file.type
+            };
+
+            s3.upload(params, function (err, data) {
+                if (err) {
+                    console.error('Upload failed:', err);
+                    alert('File upload failed. Please try again.');
+                } else {
+                    console.log('Upload successful:', data);
+                    document.getElementById('uploadSection').innerHTML = `
+                        <h2 class="text-3xl font-semibold text-center mb-6">Upload Successful</h2>
+                        <p class="text-center text-gray-500">File uploaded to: ${data.Location}</p>
+                        <div class="flex justify-center mt-4">
+                            <button id="returnBtn" type="button" class="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition duration-300">
+                                Return to Main Page
+                            </button>
+                        </div>
+                    `;
+
+                    document.getElementById('returnBtn').addEventListener('click', function () {
+                        location.reload();
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
